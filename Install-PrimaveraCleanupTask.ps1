@@ -47,12 +47,16 @@ $action = New-ScheduledTaskAction -Execute "powershell.exe" `
 # Criar trigger - todo dia 01 de Janeiro às 00:05
 $trigger = New-ScheduledTaskTrigger -Daily -At "00:05" -DaysInterval 365
 
-# Ajustar data de início para próximo 01 de Janeiro
+# Ajustar data de início para 01 de Janeiro de 2026 ou posterior
 $currentYear = (Get-Date).Year
 $nextJan1 = Get-Date -Year $currentYear -Month 1 -Day 1 -Hour 0 -Minute 5 -Second 0
 
-# Se já passou 01 de Janeiro deste ano, começar no próximo ano
-if ((Get-Date) -gt $nextJan1) {
+# Garantir que começa no mínimo em 2026
+if ($nextJan1.Year -lt 2026) {
+    $nextJan1 = Get-Date -Year 2026 -Month 1 -Day 1 -Hour 0 -Minute 5 -Second 0
+}
+# Se já passou 01 de Janeiro do ano atual, começar no próximo ano
+elseif ((Get-Date) -gt $nextJan1) {
     $nextJan1 = $nextJan1.AddYears(1)
 }
 

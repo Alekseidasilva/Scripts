@@ -8,7 +8,7 @@ Este script agenda a eliminação anual dos seguintes arquivos:
 - `C:\Program Files (x86)\PRIMAVERA\SG100\Config\LP\Primavera.hlf`
 - `C:\Program Files (x86)\PRIMAVERA\SG100\Config\LP\PRILIC.lic`
 
-**Data de execução:** Todo dia 01 de Janeiro (2025, 2026, 2027, etc.)
+**Data de execução:** Todo dia 01 de Janeiro (2026, 2027, 2028, etc.)
 **Retry automático:** Se falhar, tenta novamente após 5 dias
 
 ## 💻 Compatibilidade
@@ -132,7 +132,7 @@ Possíveis causas:
 - 🔒 A tarefa roda com privilégios de SYSTEM para garantir acesso aos arquivos
 - 📊 Todos os logs são salvos e podem ser consultados a qualquer momento
 - 🔄 O retry automático garante que falhas temporárias sejam resolvidas
-- 🗓️ A tarefa é anual, então executará automaticamente em 2025, 2026, 2027, etc.
+- 🗓️ A tarefa é anual, então executará automaticamente em 2026, 2027, 2028, etc.
 
 ## 🆘 Suporte
 
@@ -143,5 +143,5 @@ Para problemas ou dúvidas:
 
 ---
 
-**Versão:** 1.0
-**Última atualização:** Dezembro 2024
+**Versão:** 1.1
+**Última atualização:** Dezembro 2025
