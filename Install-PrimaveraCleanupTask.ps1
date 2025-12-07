@@ -1,6 +1,11 @@
 # Script de instalação da tarefa agendada
 # Agenda a eliminação de arquivos PRIMAVERA para todo dia 01 de Janeiro
 # Compatível com Windows 7, 8, 10 e 11
+# Suporta modo de auto-reparo
+
+param(
+    [switch]$AutoRepair  # Modo silencioso para auto-reparo
+)
 
 # Verificar se está executando como Administrador
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -8,14 +13,19 @@ $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIde
 if (-not $isAdmin) {
     Write-Host "ERRO: Este script precisa ser executado como Administrador!" -ForegroundColor Red
     Write-Host "Clique com botão direito e selecione 'Executar como Administrador'" -ForegroundColor Yellow
-    pause
+    if (-not $AutoRepair) { pause }
     exit 1
 }
 
-Write-Host "=========================================" -ForegroundColor Cyan
-Write-Host "Instalador de Tarefa Agendada PRIMAVERA" -ForegroundColor Cyan
-Write-Host "=========================================" -ForegroundColor Cyan
-Write-Host ""
+if (-not $AutoRepair) {
+    Write-Host "=========================================" -ForegroundColor Cyan
+    Write-Host "Instalador de Tarefa Agendada PRIMAVERA" -ForegroundColor Cyan
+    Write-Host "=========================================" -ForegroundColor Cyan
+    Write-Host ""
+}
+else {
+    Write-Host "[Auto-Reparo] Recriando tarefa agendada..." -ForegroundColor Yellow
+}
 
 # Caminho do script principal
 $scriptPath = Join-Path $PSScriptRoot "Delete-PrimaveraFiles.ps1"
@@ -24,7 +34,7 @@ $scriptPath = Join-Path $PSScriptRoot "Delete-PrimaveraFiles.ps1"
 if (-not (Test-Path $scriptPath)) {
     Write-Host "ERRO: Script Delete-PrimaveraFiles.ps1 não encontrado!" -ForegroundColor Red
     Write-Host "Certifique-se que ambos os scripts estão na mesma pasta." -ForegroundColor Yellow
-    pause
+    if (-not $AutoRepair) { pause }
     exit 1
 }
 
@@ -34,11 +44,15 @@ $taskName = "PRIMAVERA_Annual_Cleanup"
 # Verificar se tarefa já existe
 $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
 if ($existingTask) {
-    Write-Host "Tarefa agendada já existe. Removendo versão antiga..." -ForegroundColor Yellow
+    if (-not $AutoRepair) {
+        Write-Host "Tarefa agendada já existe. Removendo versão antiga..." -ForegroundColor Yellow
+    }
     Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
 }
 
-Write-Host "Criando tarefa agendada..." -ForegroundColor Green
+if (-not $AutoRepair) {
+    Write-Host "Criando tarefa agendada..." -ForegroundColor Green
+}
 
 # Criar ação - executar o script PowerShell
 $action = New-ScheduledTaskAction -Execute "powershell.exe" `
@@ -83,32 +97,48 @@ try {
         -Settings $settings `
         -Description "Eliminação anual de arquivos de licença PRIMAVERA (todo dia 01 de Janeiro)" | Out-Null
 
-    Write-Host ""
-    Write-Host "=========================================" -ForegroundColor Green
-    Write-Host "INSTALAÇÃO CONCLUÍDA COM SUCESSO!" -ForegroundColor Green
-    Write-Host "=========================================" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "Detalhes da tarefa:" -ForegroundColor Cyan
-    Write-Host "  Nome: $taskName" -ForegroundColor White
-    Write-Host "  Próxima execução: $($nextJan1.ToString('dd/MM/yyyy HH:mm'))" -ForegroundColor White
-    Write-Host "  Frequência: Anual (todo dia 01 de Janeiro)" -ForegroundColor White
-    Write-Host "  Arquivos a deletar:" -ForegroundColor White
-    Write-Host "    - C:\Program Files (x86)\PRIMAVERA\SG100\Config\LP\Primavera.hlf" -ForegroundColor White
-    Write-Host "    - C:\Program Files (x86)\PRIMAVERA\SG100\Config\LP\PRILIC.lic" -ForegroundColor White
-    Write-Host ""
-    Write-Host "  Se a eliminação falhar, será feita nova tentativa após 5 dias." -ForegroundColor Yellow
-    Write-Host "  Logs salvos em: C:\ProgramData\PrimaveraCleanup\deletion_log.txt" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "Para visualizar a tarefa, abra o 'Agendador de Tarefas' do Windows." -ForegroundColor Gray
-    Write-Host ""
+    if ($AutoRepair) {
+        Write-Host "[Auto-Reparo] Tarefa recriada com sucesso!" -ForegroundColor Green
+    }
+    else {
+        Write-Host ""
+        Write-Host "=========================================" -ForegroundColor Green
+        Write-Host "INSTALAÇÃO CONCLUÍDA COM SUCESSO!" -ForegroundColor Green
+        Write-Host "=========================================" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "Detalhes da tarefa:" -ForegroundColor Cyan
+        Write-Host "  Nome: $taskName" -ForegroundColor White
+        Write-Host "  Próxima execução: $($nextJan1.ToString('dd/MM/yyyy HH:mm'))" -ForegroundColor White
+        Write-Host "  Frequência: Anual (todo dia 01 de Janeiro)" -ForegroundColor White
+        Write-Host "  Arquivos a deletar:" -ForegroundColor White
+        Write-Host "    - Primavera.hlf (procura em múltiplas localizações)" -ForegroundColor White
+        Write-Host "    - PRILIC.lic (procura em múltiplas localizações)" -ForegroundColor White
+        Write-Host ""
+        Write-Host "  Sistema de Retry Progressivo:" -ForegroundColor Cyan
+        Write-Host "    - Tentativa 1: Imediatamente" -ForegroundColor White
+        Write-Host "    - Tentativa 2: Após 5 dias (se falhar)" -ForegroundColor White
+        Write-Host "    - Tentativa 3: Após 10 dias (se falhar)" -ForegroundColor White
+        Write-Host "    - Tentativa 4: Após 15 dias (se falhar)" -ForegroundColor White
+        Write-Host ""
+        Write-Host "  Logs salvos em: C:\ProgramData\PrimaveraCleanup\deletion_log.txt" -ForegroundColor Cyan
+        Write-Host "  Estado de retry: C:\ProgramData\PrimaveraCleanup\retry_state.json" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "  Funcionalidades avançadas:" -ForegroundColor Yellow
+        Write-Host "    ✓ Busca automática em múltiplas localizações" -ForegroundColor Green
+        Write-Host "    ✓ Retry progressivo com até 3 tentativas" -ForegroundColor Green
+        Write-Host "    ✓ Verificação de integridade e auto-reparo" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "Para visualizar a tarefa, abra o 'Agendador de Tarefas' do Windows." -ForegroundColor Gray
+        Write-Host ""
+    }
 }
 catch {
     Write-Host ""
     Write-Host "ERRO ao criar tarefa agendada:" -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
     Write-Host ""
-    pause
+    if (-not $AutoRepair) { pause }
     exit 1
 }
 
-pause
+if (-not $AutoRepair) { pause }

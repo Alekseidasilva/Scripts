@@ -9,7 +9,9 @@ Este script agenda a eliminação anual dos seguintes arquivos:
 - `C:\Program Files (x86)\PRIMAVERA\SG100\Config\LP\PRILIC.lic`
 
 **Data de execução:** Todo dia 01 de Janeiro (2026, 2027, 2028, etc.)
-**Retry automático:** Se falhar, tenta novamente após 5 dias
+**Retry progressivo:** 3 tentativas automáticas (após 5, 10 e 15 dias)
+**Busca inteligente:** Procura arquivos em múltiplas localizações automaticamente
+**Auto-reparo:** Verifica e restaura a tarefa agendada se necessário
 
 ## 💻 Compatibilidade
 
@@ -51,31 +53,62 @@ Você verá uma mensagem confirmando:
 2. Digite `taskschd.msc` e pressione Enter
 3. Procure por **"PRIMAVERA_Annual_Cleanup"** na lista
 
-### Ver Logs de Execução
+### Ver Logs e Estado
 
-Os logs são salvos em:
+**Logs de execução:**
 ```
 C:\ProgramData\PrimaveraCleanup\deletion_log.txt
 ```
+
+**Estado de retry (JSON):**
+```
+C:\ProgramData\PrimaveraCleanup\retry_state.json
+```
+
+Este arquivo rastreia:
+- Número da tentativa atual
+- Data da última execução
+- Lista de arquivos que falharam
 
 ## 📅 Funcionamento
 
 ### Execução Normal
 
 - A tarefa roda automaticamente todo dia **01 de Janeiro às 00:05**
-- Deleta os arquivos especificados
+- **Busca inteligente**: Procura os arquivos em múltiplas localizações:
+  - `C:\Program Files (x86)\PRIMAVERA\*`
+  - `C:\Program Files\PRIMAVERA\*`
+  - `C:\PRIMAVERA\*`
+  - Subdiretórios: `SG100\Config\LP`, `Config\LP`, `Config`, etc.
+- Deleta **todas as ocorrências** encontradas
 - Registra o resultado no arquivo de log
 
-### Se Houver Falha
+### Sistema de Retry Progressivo
 
-- O script detecta que houve falha na eliminação
-- Agenda automaticamente uma nova tentativa para **5 dias depois**
-- Cria tarefa temporária chamada **"PRIMAVERA_Cleanup_Retry"**
-- Registra a falha no log
+Se houver falhas, o sistema tenta automaticamente múltiplas vezes:
 
-### Após Sucesso
+| Tentativa | Intervalo | Descrição |
+|-----------|-----------|-----------|
+| **1ª** | Imediato | Execução normal anual |
+| **2ª** | +5 dias | Se a 1ª tentativa falhar |
+| **3ª** | +10 dias | Se a 2ª tentativa falhar |
+| **4ª** | +15 dias | Se a 3ª tentativa falhar |
+
+- Salva estado em: `C:\ProgramData\PrimaveraCleanup\retry_state.json`
+- Cria tarefa temporária **"PRIMAVERA_Cleanup_Retry"** para cada tentativa
+- Após **3 retries sem sucesso**, registra erro crítico no log
+
+### Verificação de Integridade
+
+A cada execução, o script verifica:
+- ✅ Se a tarefa anual **"PRIMAVERA_Annual_Cleanup"** existe
+- ✅ Se a tarefa está habilitada (não foi desabilitada manualmente)
+- ✅ Se necessário, **recria automaticamente** a tarefa (auto-reparo)
+
+### Após Sucesso Total
 
 - Remove automaticamente qualquer tarefa de retry pendente
+- Limpa arquivo de estado
 - Aguarda até o próximo 01 de Janeiro
 
 ## ❌ Como Desinstalar
@@ -126,12 +159,33 @@ Possíveis causas:
 3. Clique com botão direito → **Executar**
 4. Verifique o histórico na aba **"Histórico"**
 
+## 🎯 Funcionalidades Avançadas (v2.0)
+
+### 1️⃣ Retry Progressivo Inteligente
+- **3 tentativas automáticas** com intervalos crescentes (5, 10, 15 dias)
+- Rastreamento de estado em arquivo JSON
+- Desistência automática após esgotar tentativas
+
+### 2️⃣ Busca em Múltiplas Localizações
+- Suporta instalações customizadas do PRIMAVERA
+- Procura em **Program Files (x86)**, **Program Files** e **C:\PRIMAVERA**
+- Busca recursiva em subdiretórios se necessário
+- **Deleta todas as ocorrências** encontradas
+
+### 3️⃣ Auto-Reparo e Verificação de Integridade
+- Verifica se a tarefa anual existe a cada execução
+- Detecta se a tarefa foi desabilitada manualmente
+- **Recria automaticamente** a tarefa se necessário
+- Garante continuidade do agendamento
+
 ## 📝 Notas Importantes
 
 - ⚠️ **Este script deleta arquivos permanentemente!** Certifique-se que você realmente deseja eliminar estes arquivos.
 - 🔒 A tarefa roda com privilégios de SYSTEM para garantir acesso aos arquivos
 - 📊 Todos os logs são salvos e podem ser consultados a qualquer momento
-- 🔄 O retry automático garante que falhas temporárias sejam resolvidas
+- 🔄 Sistema de retry progressivo com até **3 tentativas** automáticas
+- 🔍 Busca inteligente encontra arquivos em **qualquer localização** do PRIMAVERA
+- 🛠️ Auto-reparo garante que a tarefa continue funcionando mesmo se for removida
 - 🗓️ A tarefa é anual, então executará automaticamente em 2026, 2027, 2028, etc.
 
 ## 🆘 Suporte
@@ -143,5 +197,11 @@ Para problemas ou dúvidas:
 
 ---
 
-**Versão:** 1.1
+**Versão:** 2.0
 **Última atualização:** Dezembro 2025
+**Changelog v2.0:**
+- ✨ Retry progressivo com múltiplas tentativas (5, 10, 15 dias)
+- ✨ Busca automática em múltiplas localizações do PRIMAVERA
+- ✨ Verificação de integridade e auto-reparo da tarefa agendada
+- ✨ Sistema de estado persistente (retry_state.json)
+- ✨ Logs detalhados com rastreamento de tentativas
