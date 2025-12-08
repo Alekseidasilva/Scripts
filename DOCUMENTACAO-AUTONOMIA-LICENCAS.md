@@ -17,6 +17,7 @@ Este documento explica como o sistema garante a ativação de licenças de forma
 
 2. **Licenciamento** (`License-Primavera.ps1`):
    - Valida a presença dos arquivos embutidos diretamente na pasta do pacote antes de seguir.
+   - Cria automaticamente a pasta `Logs` e o arquivo `licensing.log` no `PrimaveraLicenseVault` antes de registrar qualquer mensagem.
    - Continua com o processo normal de cópia para as pastas do PRIMAVERA e agenda tarefas de expiração.
 
 ## Benefícios
