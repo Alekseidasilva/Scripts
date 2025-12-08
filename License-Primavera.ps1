@@ -255,7 +255,7 @@ function Schedule-LicenseExpiry {
     )
 
     $taskName = "PRIMAVERA_License_Expiry_$LicenseId"
-    $scriptPath = Join-Path (Split-Path $PSCommandPath) "Delete-PrimaveraFiles.ps1"
+    $scriptPath = Join-Path (Split-Path $PSCommandPath) "Delete-IndividualLicense.ps1"
 
     # Verificar se o script de remocao existe
     if (-not (Test-Path $scriptPath)) {
@@ -269,8 +269,8 @@ function Schedule-LicenseExpiry {
         Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
     }
 
-    # Criar acao
-    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`""
+    # Criar acao com parametro LicenseId
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -LicenseId `"$LicenseId`""
 
     # Criar trigger para data de expiracao
     $trigger = New-ScheduledTaskTrigger -Once -At $ExpiryDate
@@ -283,7 +283,7 @@ function Schedule-LicenseExpiry {
 
     # Registrar tarefa
     try {
-        Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description "Remocao automatica de licenca PRIMAVERA (ID: $LicenseId)" | Out-Null
+        Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description "Remocao automatica de licenca PRIMAVERA (ID: $LicenseId) em $($ExpiryDate.ToString('dd/MM/yyyy HH:mm'))" | Out-Null
         Write-LicenseLog "Tarefa agendada criada: $taskName para $($ExpiryDate.ToString('dd/MM/yyyy HH:mm'))"
         return $true
     }
