@@ -8,10 +8,10 @@ Este script agenda a eliminação anual dos seguintes arquivos:
 - `C:\Program Files (x86)\PRIMAVERA\SG100\Config\LP\Primavera.hlf`
 - `C:\Program Files (x86)\PRIMAVERA\SG100\Config\LP\PRILIC.lic`
 
-**Data de execução:** Todo dia 01 de Janeiro (2026, 2027, 2028, etc.)
-**Retry progressivo:** 3 tentativas automáticas (após 5, 10 e 15 dias)
+**Data de execução:** Todo dia 01 de Janeiro às 10:00 (2026, 2027, 2028, etc.)
+**Retry inteligente:** A cada 2 horas durante 15 dias se houver falhas
 **Busca inteligente:** Procura arquivos em múltiplas localizações automaticamente
-**Auto-reparo:** Verifica e restaura a tarefa agendada se necessário
+**Desativação automática:** Tarefa se desativa sozinha após eliminação bem-sucedida
 
 ## 💻 Compatibilidade
 
@@ -76,15 +76,16 @@ C:\ProgramData\PrimaveraCleanup\retry_state.json
 ```
 
 Este arquivo rastreia:
-- Número da tentativa atual
-- Data da última execução
+- Data/hora da primeira tentativa
+- Data/hora da última tentativa
+- Número total de tentativas realizadas
 - Lista de arquivos que falharam
 
 ## 📅 Funcionamento
 
 ### Execução Normal
 
-- A tarefa roda automaticamente todo dia **01 de Janeiro às 00:05**
+- A tarefa roda automaticamente todo dia **01 de Janeiro às 10:00**
 - **Busca inteligente**: Procura os arquivos em múltiplas localizações:
   - `C:\Program Files (x86)\PRIMAVERA\*`
   - `C:\Program Files\PRIMAVERA\*`
@@ -92,21 +93,30 @@ Este arquivo rastreia:
   - Subdiretórios: `SG100\Config\LP`, `Config\LP`, `Config`, etc.
 - Deleta **todas as ocorrências** encontradas
 - Registra o resultado no arquivo de log
+- **Desativa a tarefa automaticamente** após sucesso
 
-### Sistema de Retry Progressivo
+### Sistema de Retry Inteligente
 
-Se houver falhas, o sistema tenta automaticamente múltiplas vezes:
+Se houver falhas, o sistema tenta automaticamente a cada 2 horas:
 
-| Tentativa | Intervalo | Descrição |
-|-----------|-----------|-----------|
-| **1ª** | Imediato | Execução normal anual |
-| **2ª** | +5 dias | Se a 1ª tentativa falhar |
-| **3ª** | +10 dias | Se a 2ª tentativa falhar |
-| **4ª** | +15 dias | Se a 3ª tentativa falhar |
+**Exemplo de sequência de tentativas no dia 01/01/2026:**
 
-- Salva estado em: `C:\ProgramData\PrimaveraCleanup\retry_state.json`
-- Cria tarefa temporária **"PRIMAVERA_Cleanup_Retry"** para cada tentativa
-- Após **3 retries sem sucesso**, registra erro crítico no log
+| Hora | Status | Próxima Ação |
+|------|--------|--------------|
+| **10:00** | Falha na deleção | Agenda retry para 12:00 |
+| **12:00** | Falha novamente | Agenda retry para 14:00 |
+| **14:00** | Falha novamente | Agenda retry para 16:00 |
+| **16:00** | Falha novamente | Agenda retry para 18:00 |
+| **...** | Continua a cada 2h | Até completar 15 dias |
+| **16/01** | Fim do período | Registra erro crítico |
+
+**Características:**
+- ✅ Intervalo: **2 horas** entre tentativas
+- ✅ Período máximo: **15 dias** a partir de 01/01
+- ✅ Tentativas ilimitadas dentro do período
+- ✅ Horários: 10h, 12h, 14h, 16h, 18h, 20h, 22h, 00h, 02h, 04h, 06h, 08h...
+- ✅ Salva estado em: `C:\ProgramData\PrimaveraCleanup\retry_state.json`
+- ✅ Cria tarefa temporária **"PRIMAVERA_Cleanup_Retry"** para cada tentativa
 
 ### Verificação de Integridade
 
@@ -117,9 +127,11 @@ A cada execução, o script verifica:
 
 ### Após Sucesso Total
 
-- Remove automaticamente qualquer tarefa de retry pendente
-- Limpa arquivo de estado
-- Aguarda até o próximo 01 de Janeiro
+- ✅ Remove automaticamente qualquer tarefa de retry pendente
+- ✅ Limpa arquivo de estado
+- ✅ **DESATIVA a tarefa anual automaticamente**
+- ✅ Registra no log que a tarefa foi desativada
+- ℹ️ A tarefa permanece desativada e não executará mais nos próximos anos
 
 ## ❌ Como Desinstalar
 
@@ -189,12 +201,14 @@ Possíveis causas:
 3. Clique com botão direito → **Executar**
 4. Verifique o histórico na aba **"Histórico"**
 
-## 🎯 Funcionalidades Avançadas (v2.0)
+## 🎯 Funcionalidades Avançadas (v3.0)
 
-### 1️⃣ Retry Progressivo Inteligente
-- **3 tentativas automáticas** com intervalos crescentes (5, 10, 15 dias)
+### 1️⃣ Retry Inteligente a Cada 2 Horas
+- **Tentativas ilimitadas** a cada 2 horas durante 15 dias
+- Primeira tentativa: **01/01 às 10:00**
+- Retries: **12:00, 14:00, 16:00, 18:00...** (continuamente)
 - Rastreamento de estado em arquivo JSON
-- Desistência automática após esgotar tentativas
+- Desistência automática após 15 dias
 
 ### 2️⃣ Busca em Múltiplas Localizações
 - Suporta instalações customizadas do PRIMAVERA
@@ -202,7 +216,13 @@ Possíveis causas:
 - Busca recursiva em subdiretórios se necessário
 - **Deleta todas as ocorrências** encontradas
 
-### 3️⃣ Auto-Reparo e Verificação de Integridade
+### 3️⃣ Desativação Automática
+- **Desativa a tarefa anual** assim que deletar com sucesso
+- Impede execuções futuras desnecessárias
+- Economia de recursos do sistema
+- Conclusão definitiva da operação
+
+### 4️⃣ Auto-Reparo e Verificação de Integridade
 - Verifica se a tarefa anual existe a cada execução
 - Detecta se a tarefa foi desabilitada manualmente
 - **Recria automaticamente** a tarefa se necessário
@@ -213,9 +233,10 @@ Possíveis causas:
 - ⚠️ **Este script deleta arquivos permanentemente!** Certifique-se que você realmente deseja eliminar estes arquivos.
 - 🔒 A tarefa roda com privilégios de SYSTEM para garantir acesso aos arquivos
 - 📊 Todos os logs são salvos e podem ser consultados a qualquer momento
-- 🔄 Sistema de retry progressivo com até **3 tentativas** automáticas
+- 🔄 Sistema de retry a cada **2 horas** durante **15 dias**
 - 🔍 Busca inteligente encontra arquivos em **qualquer localização** do PRIMAVERA
 - 🛠️ Auto-reparo garante que a tarefa continue funcionando mesmo se for removida
+- 🎯 Desativação automática após sucesso - sem execuções futuras desnecessárias
 - 🗓️ A tarefa é anual, então executará automaticamente em 2026, 2027, 2028, etc.
 
 ## 🆘 Suporte
@@ -227,8 +248,15 @@ Para problemas ou dúvidas:
 
 ---
 
-**Versão:** 2.1
+**Versão:** 3.0
 **Última atualização:** Dezembro 2025
+
+**Changelog v3.0:**
+- 🚀 Retry a cada 2 horas (ao invés de dias)
+- 🚀 Horário de início: 10:00 (ao invés de 00:05)
+- 🚀 Período de retry: 15 dias contínuos
+- 🚀 Desativação automática da tarefa após sucesso
+- 🚀 Tentativas ilimitadas dentro do período de 15 dias
 
 **Changelog v2.1:**
 - 🚀 Arquivos .bat para instalação/desinstalação com um clique
@@ -236,7 +264,6 @@ Para problemas ou dúvidas:
 - 📚 Instruções simplificadas no README
 
 **Changelog v2.0:**
-- ✨ Retry progressivo com múltiplas tentativas (5, 10, 15 dias)
 - ✨ Busca automática em múltiplas localizações do PRIMAVERA
 - ✨ Verificação de integridade e auto-reparo da tarefa agendada
 - ✨ Sistema de estado persistente (retry_state.json)

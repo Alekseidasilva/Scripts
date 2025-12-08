@@ -57,16 +57,16 @@ if (-not $AutoRepair) {
 # Criar acao - executar o script PowerShell
 $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`""
 
-# Criar trigger - todo dia 01 de Janeiro as 00:05
-$trigger = New-ScheduledTaskTrigger -Daily -At "00:05" -DaysInterval 365
+# Criar trigger - todo dia 01 de Janeiro as 10:00
+$trigger = New-ScheduledTaskTrigger -Daily -At "10:00" -DaysInterval 365
 
 # Ajustar data de inicio para 01 de Janeiro de 2026 ou posterior
 $currentYear = (Get-Date).Year
-$nextJan1 = Get-Date -Year $currentYear -Month 1 -Day 1 -Hour 0 -Minute 5 -Second 0
+$nextJan1 = Get-Date -Year $currentYear -Month 1 -Day 1 -Hour 10 -Minute 0 -Second 0
 
 # Garantir que comeca no minimo em 2026
 if ($nextJan1.Year -lt 2026) {
-    $nextJan1 = Get-Date -Year 2026 -Month 1 -Day 1 -Hour 0 -Minute 5 -Second 0
+    $nextJan1 = Get-Date -Year 2026 -Month 1 -Day 1 -Hour 10 -Minute 0 -Second 0
 }
 elseif ((Get-Date) -gt $nextJan1) {
     $nextJan1 = $nextJan1.AddYears(1)
@@ -101,18 +101,19 @@ try {
         Write-Host "    - Primavera.hlf (procura em multiplas localizacoes)" -ForegroundColor White
         Write-Host "    - PRILIC.lic (procura em multiplas localizacoes)" -ForegroundColor White
         Write-Host ""
-        Write-Host "  Sistema de Retry Progressivo:" -ForegroundColor Cyan
-        Write-Host "    - Tentativa 1: Imediatamente" -ForegroundColor White
-        Write-Host "    - Tentativa 2: Apos 5 dias (se falhar)" -ForegroundColor White
-        Write-Host "    - Tentativa 3: Apos 10 dias (se falhar)" -ForegroundColor White
-        Write-Host "    - Tentativa 4: Apos 15 dias (se falhar)" -ForegroundColor White
+        Write-Host "  Sistema de Retry Inteligente:" -ForegroundColor Cyan
+        Write-Host "    - Horario inicial: 10:00 do dia 01/01" -ForegroundColor White
+        Write-Host "    - Intervalo: A cada 2 horas (10h, 12h, 14h, 16h...)" -ForegroundColor White
+        Write-Host "    - Periodo maximo: 15 dias a partir de 01/01" -ForegroundColor White
+        Write-Host "    - Desativa tarefa automaticamente apos sucesso" -ForegroundColor White
         Write-Host ""
         Write-Host "  Logs salvos em: C:\ProgramData\PrimaveraCleanup\deletion_log.txt" -ForegroundColor Cyan
         Write-Host "  Estado de retry: C:\ProgramData\PrimaveraCleanup\retry_state.json" -ForegroundColor Cyan
         Write-Host ""
         Write-Host "  Funcionalidades avancadas:" -ForegroundColor Yellow
         Write-Host "    - Busca automatica em multiplas localizacoes" -ForegroundColor Green
-        Write-Host "    - Retry progressivo com ate 3 tentativas" -ForegroundColor Green
+        Write-Host "    - Retry a cada 2h durante 15 dias" -ForegroundColor Green
+        Write-Host "    - Desativa tarefa apos conclusao" -ForegroundColor Green
         Write-Host "    - Verificacao de integridade e auto-reparo" -ForegroundColor Green
         Write-Host ""
         Write-Host "Para visualizar a tarefa, abra o 'Agendador de Tarefas' do Windows." -ForegroundColor Gray

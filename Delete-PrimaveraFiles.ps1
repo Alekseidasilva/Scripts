@@ -1,12 +1,13 @@
 # Script para deletar arquivos da PRIMAVERA
-# Executa anualmente em 01 de Janeiro
-# Sistema de retry progressivo: 5, 10, 15 dias
-# Verificação de integridade e auto-reparo
-# Busca automática em múltiplas localizações
+# Executa anualmente em 01 de Janeiro as 10:00
+# Sistema de retry a cada 2 horas durante 15 dias
+# Desativa tarefa automaticamente apos sucesso
+# Verificacao de integridade e auto-reparo
+# Busca automatica em multiplas localizacoes
 
-#region Configuração
+#region Configuracao
 
-# Diretórios de log e estado
+# Diretorios de log e estado
 $logDir = "$env:ProgramData\PrimaveraCleanup"
 $logFile = "$logDir\deletion_log.txt"
 $stateFile = "$logDir\retry_state.json"
@@ -15,9 +16,9 @@ $stateFile = "$logDir\retry_state.json"
 $mainTaskName = "PRIMAVERA_Annual_Cleanup"
 $retryTaskName = "PRIMAVERA_Cleanup_Retry"
 
-# Configuração de retry progressivo
-$retryIntervals = @(5, 10, 15)  # Dias entre tentativas
-$maxRetries = 3
+# Configuracao de retry - a cada 2 horas
+$retryIntervalHours = 2
+$maxRetryPeriodDays = 15  # Periodo maximo de tentativas (15 dias)
 
 # Arquivos base a procurar (sem caminho completo)
 $targetFiles = @(
@@ -25,7 +26,7 @@ $targetFiles = @(
     "PRILIC.lic"
 )
 
-# Caminhos possíveis para instalação do PRIMAVERA
+# Caminhos possiveis para instalacao do PRIMAVERA
 $possibleBasePaths = @(
     "C:\Program Files (x86)\PRIMAVERA",
     "C:\Program Files\PRIMAVERA",
@@ -34,7 +35,7 @@ $possibleBasePaths = @(
     "$env:ProgramFiles\PRIMAVERA"
 )
 
-# Subdiretórios possíveis dentro da instalação
+# Subdiretorios possiveis dentro da instalacao
 $possibleSubPaths = @(
     "SG100\Config\LP",
     "Config\LP",
@@ -45,14 +46,14 @@ $possibleSubPaths = @(
 
 #endregion
 
-#region Funções Auxiliares
+#region Funcoes Auxiliares
 
-# Criar diretório de log se não existir
+# Criar diretorio de log se nao existir
 if (-not (Test-Path $logDir)) {
     New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 }
 
-# Função para escrever no log
+# Funcao para escrever no log
 function Write-Log {
     param([string]$Message)
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -61,7 +62,7 @@ function Write-Log {
     Write-Host $logMessage
 }
 
-# Função para carregar estado de retry
+# Funcao para carregar estado de retry
 function Get-RetryState {
     if (Test-Path $stateFile) {
         try {
@@ -69,31 +70,33 @@ function Get-RetryState {
             return $state
         }
         catch {
-            Write-Log "AVISO: Não foi possível ler arquivo de estado. Criando novo."
+            Write-Log "AVISO: Nao foi possivel ler arquivo de estado. Criando novo."
             return $null
         }
     }
     return $null
 }
 
-# Função para salvar estado de retry
+# Funcao para salvar estado de retry
 function Set-RetryState {
     param(
-        [int]$AttemptNumber,
+        [datetime]$FirstAttempt,
         [datetime]$LastAttempt,
+        [int]$TotalAttempts,
         [string[]]$FailedFiles
     )
 
     $state = @{
-        AttemptNumber = $AttemptNumber
+        FirstAttempt = $FirstAttempt.ToString("o")
         LastAttempt = $LastAttempt.ToString("o")
+        TotalAttempts = $TotalAttempts
         FailedFiles = $FailedFiles
     }
 
     $state | ConvertTo-Json | Set-Content $stateFile
 }
 
-# Função para limpar estado de retry
+# Funcao para limpar estado de retry
 function Clear-RetryState {
     if (Test-Path $stateFile) {
         Remove-Item $stateFile -Force
@@ -101,7 +104,7 @@ function Clear-RetryState {
     }
 }
 
-# Função para procurar arquivo em múltiplas localizações
+# Funcao para procurar arquivo em multiplas localizacoes
 function Find-PrimaveraFile {
     param([string]$FileName)
 
@@ -121,7 +124,7 @@ function Find-PrimaveraFile {
         }
     }
 
-    # Também procurar recursivamente no diretório raiz do PRIMAVERA
+    # Tambem procurar recursivamente no diretorio raiz do PRIMAVERA
     foreach ($basePath in $possibleBasePaths) {
         if (Test-Path $basePath) {
             try {
@@ -134,7 +137,7 @@ function Find-PrimaveraFile {
                 }
             }
             catch {
-                # Ignorar erros de permissão durante busca recursiva
+                # Ignorar erros de permissao durante busca recursiva
             }
         }
     }
@@ -142,63 +145,74 @@ function Find-PrimaveraFile {
     return $foundPaths
 }
 
-# Função para verificar e reparar tarefa anual
+# Funcao para verificar e reparar tarefa anual
 function Repair-MainTask {
     Write-Log "Verificando integridade da tarefa anual '$mainTaskName'..."
 
     $task = Get-ScheduledTask -TaskName $mainTaskName -ErrorAction SilentlyContinue
 
     if (-not $task) {
-        Write-Log "AVISO: Tarefa anual não encontrada. Tentando recriar..."
+        Write-Log "AVISO: Tarefa anual nao encontrada. Tentando recriar..."
 
-        # Procurar script de instalação
+        # Procurar script de instalacao
         $installScript = Join-Path (Split-Path $PSCommandPath) "Install-PrimaveraCleanupTask.ps1"
 
         if (Test-Path $installScript) {
-            Write-Log "Script de instalação encontrado. Executando auto-reparo..."
+            Write-Log "Script de instalacao encontrado. Executando auto-reparo..."
             try {
                 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installScript -AutoRepair
-                Write-Log "Auto-reparo concluído com sucesso"
+                Write-Log "Auto-reparo concluido com sucesso"
             }
             catch {
                 Write-Log "ERRO: Falha no auto-reparo - $($_.Exception.Message)"
             }
         }
         else {
-            Write-Log "ERRO: Script de instalação não encontrado em: $installScript"
+            Write-Log "ERRO: Script de instalacao nao encontrado em: $installScript"
             Write-Log "Execute manualmente: Install-PrimaveraCleanupTask.ps1"
         }
         return $false
     }
 
-    # Verificar se a tarefa está habilitada
+    # Verificar se a tarefa esta habilitada
     if ($task.State -eq 'Disabled') {
-        Write-Log "AVISO: Tarefa anual está desabilitada. Habilitando..."
+        Write-Log "AVISO: Tarefa anual esta desabilitada. Habilitando..."
         Enable-ScheduledTask -TaskName $mainTaskName | Out-Null
         Write-Log "Tarefa habilitada com sucesso"
     }
 
-    Write-Log "Verificação de integridade concluída. Tarefa está OK."
+    Write-Log "Verificacao de integridade concluida. Tarefa esta OK."
     return $true
 }
 
 #endregion
 
-#region Execução Principal
+#region Execucao Principal
 
 Write-Log "========================================="
-Write-Log "Iniciando processo de eliminação de arquivos PRIMAVERA"
+Write-Log "Iniciando processo de eliminacao de arquivos PRIMAVERA"
 
 # Verificar integridade da tarefa anual
 Repair-MainTask
 
 # Carregar estado de retry
 $retryState = Get-RetryState
-$attemptNumber = if ($retryState) { $retryState.AttemptNumber } else { 1 }
+$currentTime = Get-Date
 
-Write-Log "Tentativa #$attemptNumber de $maxRetries"
+if ($retryState) {
+    $firstAttempt = [datetime]::Parse($retryState.FirstAttempt)
+    $totalAttempts = $retryState.TotalAttempts + 1
 
-# Estatísticas
+    $daysSinceFirst = ($currentTime - $firstAttempt).TotalDays
+    Write-Log "Tentativa #$totalAttempts (dia $([math]::Floor($daysSinceFirst) + 1) de $maxRetryPeriodDays)"
+}
+else {
+    $firstAttempt = $currentTime
+    $totalAttempts = 1
+    Write-Log "Tentativa #$totalAttempts (primeira execucao)"
+}
+
+# Estatisticas
 $deletedCount = 0
 $notFoundCount = 0
 $failedCount = 0
@@ -208,15 +222,15 @@ $failedFiles = @()
 foreach ($fileName in $targetFiles) {
     Write-Log "Procurando arquivo: $fileName"
 
-    # Buscar arquivo em todas as localizações possíveis
+    # Buscar arquivo em todas as localizacoes possiveis
     $foundPaths = Find-PrimaveraFile -FileName $fileName
 
     if ($foundPaths.Count -eq 0) {
-        Write-Log "  INFO: Arquivo não encontrado em nenhuma localização"
+        Write-Log "  INFO: Arquivo nao encontrado em nenhuma localizacao"
         $notFoundCount++
     }
     else {
-        Write-Log "  Encontradas $($foundPaths.Count) ocorrência(s)"
+        Write-Log "  Encontradas $($foundPaths.Count) ocorrencia(s)"
 
         foreach ($filePath in $foundPaths) {
             try {
@@ -234,24 +248,28 @@ foreach ($fileName in $targetFiles) {
 }
 
 Write-Log "========================================="
-Write-Log "Resumo: $deletedCount deletado(s), $notFoundCount não encontrado(s), $failedCount falha(s)"
+Write-Log "Resumo: $deletedCount deletado(s), $notFoundCount nao encontrado(s), $failedCount falha(s)"
 
 #endregion
 
-#region Gestão de Retry
+#region Gestao de Retry
 
-# Se houve falhas e ainda há tentativas disponíveis
-if ($failedCount -gt 0 -and $attemptNumber -le $maxRetries) {
+# Verificar se ainda esta dentro do periodo de 15 dias
+$daysSinceFirst = ($currentTime - $firstAttempt).TotalDays
+$withinRetryPeriod = $daysSinceFirst -lt $maxRetryPeriodDays
 
-    # Calcular intervalo de retry progressivo
-    $retryDays = $retryIntervals[$attemptNumber - 1]
-    $retryDate = (Get-Date).AddDays($retryDays)
+# Se houve falhas e ainda esta dentro do periodo de retry
+if ($failedCount -gt 0 -and $withinRetryPeriod) {
 
-    Write-Log "ATENÇÃO: Houve $failedCount falha(s)."
-    Write-Log "Agendando tentativa #$($attemptNumber + 1) para daqui a $retryDays dias..."
+    # Calcular proxima tentativa (daqui a 2 horas)
+    $retryDate = $currentTime.AddHours($retryIntervalHours)
+
+    Write-Log "ATENCAO: Houve $failedCount falha(s)."
+    Write-Log "Agendando proxima tentativa para: $($retryDate.ToString('dd/MM/yyyy HH:mm:ss'))"
+    Write-Log "Dias restantes no periodo de retry: $([math]::Ceiling($maxRetryPeriodDays - $daysSinceFirst))"
 
     # Salvar estado
-    Set-RetryState -AttemptNumber ($attemptNumber + 1) -LastAttempt (Get-Date) -FailedFiles $failedFiles
+    Set-RetryState -FirstAttempt $firstAttempt -LastAttempt $currentTime -TotalAttempts $totalAttempts -FailedFiles $failedFiles
 
     # Remover tarefa de retry existente se houver
     $existingRetryTask = Get-ScheduledTask -TaskName $retryTaskName -ErrorAction SilentlyContinue
@@ -265,21 +283,21 @@ if ($failedCount -gt 0 -and $attemptNumber -le $maxRetries) {
     $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
     $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
 
-    Register-ScheduledTask -TaskName $retryTaskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description "Retry automático #$attemptNumber para eliminação de arquivos PRIMAVERA" | Out-Null
+    Register-ScheduledTask -TaskName $retryTaskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description "Retry automatico (tentativa $totalAttempts) para eliminacao de arquivos PRIMAVERA" | Out-Null
 
-    Write-Log "Retry agendado para: $($retryDate.ToString('dd/MM/yyyy HH:mm:ss'))"
-    Write-Log "Tentativa: $attemptNumber de $maxRetries"
+    Write-Log "Proxima tentativa: $($retryDate.ToString('dd/MM/yyyy HH:mm:ss'))"
     exit 1
 }
-# Se houve falhas mas esgotaram-se as tentativas
-elseif ($failedCount -gt 0 -and $attemptNumber -gt $maxRetries) {
+# Se houve falhas mas esgotou o periodo de 15 dias
+elseif ($failedCount -gt 0 -and -not $withinRetryPeriod) {
     Write-Log "========================================="
-    Write-Log "ERRO CRÍTICO: Todas as $maxRetries tentativas falharam!"
-    Write-Log "Arquivos que não puderam ser deletados:"
+    Write-Log "ERRO CRITICO: Periodo de retry de $maxRetryPeriodDays dias esgotado!"
+    Write-Log "Total de tentativas realizadas: $totalAttempts"
+    Write-Log "Arquivos que nao puderam ser deletados:"
     foreach ($file in $failedFiles) {
         Write-Log "  - $file"
     }
-    Write-Log "Ação necessária: Verificar permissões e processos em execução"
+    Write-Log "Acao necessaria: Verificar permissoes e processos em execucao"
     Write-Log "========================================="
 
     # Limpar estado e tarefa de retry
@@ -287,14 +305,15 @@ elseif ($failedCount -gt 0 -and $attemptNumber -gt $maxRetries) {
     $retryTask = Get-ScheduledTask -TaskName $retryTaskName -ErrorAction SilentlyContinue
     if ($retryTask) {
         Unregister-ScheduledTask -TaskName $retryTaskName -Confirm:$false
-        Write-Log "Tarefa de retry removida (tentativas esgotadas)"
+        Write-Log "Tarefa de retry removida (periodo esgotado)"
     }
 
     exit 2
 }
-# Sucesso total
+# Sucesso total - arquivos deletados ou nao encontrados
 else {
-    Write-Log "Processo concluído com sucesso!"
+    Write-Log "Processo concluido com sucesso!"
+    Write-Log "Total de tentativas realizadas: $totalAttempts"
 
     # Limpar estado e remover tarefa de retry
     Clear-RetryState
@@ -302,7 +321,20 @@ else {
     $retryTask = Get-ScheduledTask -TaskName $retryTaskName -ErrorAction SilentlyContinue
     if ($retryTask) {
         Unregister-ScheduledTask -TaskName $retryTaskName -Confirm:$false
-        Write-Log "Tarefa de retry removida (não é mais necessária)"
+        Write-Log "Tarefa de retry removida (nao e mais necessaria)"
+    }
+
+    # DESATIVAR a tarefa anual apos sucesso
+    try {
+        Disable-ScheduledTask -TaskName $mainTaskName -ErrorAction Stop | Out-Null
+        Write-Log "========================================="
+        Write-Log "TAREFA ANUAL DESATIVADA COM SUCESSO!"
+        Write-Log "A tarefa '$mainTaskName' foi desativada automaticamente."
+        Write-Log "Os arquivos foram eliminados e nao serao mais processados."
+        Write-Log "========================================="
+    }
+    catch {
+        Write-Log "AVISO: Nao foi possivel desativar a tarefa anual: $($_.Exception.Message)"
     }
 
     exit 0
