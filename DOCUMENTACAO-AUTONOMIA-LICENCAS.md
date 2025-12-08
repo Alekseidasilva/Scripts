@@ -43,3 +43,6 @@ Com esse fluxo, o licenciamento pode ser realizado em qualquer máquina compatí
 - Se o `License-Primavera.ps1` exibir erro de sintaxe logo ao iniciar, verifique se a linha de separador do log está completa:
   `Write-LicenseLog "========================================="`. Restaure a linha exatamente como acima para evitar falhas de
   parsing que impedem o carregamento do formulário de licenciamento.
+- Se surgir um aviso de **arquivo master ausente** (ex.: `Primavera.hlf` ou `PRILIC.lic`), confirme que ambos estão na mesma
+  pasta que o `LICENCIAR.bat`. Sem esses arquivos o licenciamento é interrompido de propósito para evitar uma ativação
+  incompleta. Reponha os arquivos a partir do repositório e execute novamente.

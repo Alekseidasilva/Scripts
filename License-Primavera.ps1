@@ -67,18 +67,27 @@ function Initialize-LicenseSystem {
 
     # Validar arquivos master diretamente do pacote
     foreach ($master in $masterFiles) {
-        if (-not (Test-Path $master.Path)) {
-            Write-LicenseLog "ERRO: Arquivo master ausente no pacote: $($master.Name)"
-            throw "Arquivo master ausente: $($master.Name)"
+        if (-not (Test-Path -LiteralPath $master.Path)) {
+            $missingMessage = "ERRO: Arquivo master ausente ou inacessivel no pacote: $($master.Name). Confirme que ele foi distribuido junto ao LICENCIAR.bat."
+            Write-LicenseLog $missingMessage
+            [System.Windows.Forms.MessageBox]::Show($missingMessage, "Arquivo master ausente", "OK", "Error") | Out-Null
+            throw $missingMessage
         }
 
-        # Garantir atributos oculto e somente leitura
-        $item = Get-Item $master.Path
-        $desiredAttributes = [System.IO.FileAttributes]::Hidden -bor [System.IO.FileAttributes]::ReadOnly
-        $newAttributes = $item.Attributes -bor $desiredAttributes
-        if ($newAttributes -ne $item.Attributes) {
-            Set-ItemProperty -Path $master.Path -Name Attributes -Value $newAttributes
-            Write-LicenseLog "Atributos aplicados (oculto e somente leitura): $($master.Path)"
+        try {
+            # Garantir atributos oculto e somente leitura
+            $item = Get-Item -LiteralPath $master.Path -ErrorAction Stop
+            $desiredAttributes = [System.IO.FileAttributes]::Hidden -bor [System.IO.FileAttributes]::ReadOnly
+            $newAttributes = $item.Attributes -bor $desiredAttributes
+            if ($newAttributes -ne $item.Attributes) {
+                Set-ItemProperty -Path $master.Path -Name Attributes -Value $newAttributes
+                Write-LicenseLog "Atributos aplicados (oculto e somente leitura): $($master.Path)"
+            }
+        }
+        catch {
+            $attrMessage = "ERRO ao ler ou aplicar atributos no arquivo master $($master.Name): $($_.Exception.Message)"
+            Write-LicenseLog $attrMessage
+            throw $attrMessage
         }
     }
 
