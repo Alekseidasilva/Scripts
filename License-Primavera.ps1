@@ -12,7 +12,7 @@ Add-Type -AssemblyName System.Drawing
 # Diretorios do sistema
 $scriptRoot = Split-Path -Parent $PSCommandPath
 $vaultDir = "C:\PrimaveraLicenseVault"
-$masterDir = "$vaultDir\Master"
+$masterDir = $scriptRoot
 $databaseDir = "$vaultDir\Database"
 $backupDir = "$vaultDir\Backups"
 $logsDir = "$vaultDir\Logs"
@@ -49,24 +49,18 @@ function Write-LicenseLog {
 
 function Initialize-LicenseSystem {
     # Criar diretorios se nao existirem
-    @($vaultDir, $masterDir, $databaseDir, $backupDir, $logsDir) | ForEach-Object {
+    @($vaultDir, $databaseDir, $backupDir, $logsDir) | ForEach-Object {
         if (-not (Test-Path $_)) {
             New-Item -ItemType Directory -Path $_ -Force | Out-Null
             Write-LicenseLog "Diretorio criado: $_"
         }
     }
 
-    # Garantir que os arquivos master estao presentes na pasta local
+    # Validar arquivos master diretamente do pacote
     foreach ($master in $masterFiles) {
         if (-not (Test-Path $master.Path)) {
-            $embeddedPath = Join-Path $scriptRoot $master.Name
-            if (Test-Path $embeddedPath) {
-                Copy-Item $embeddedPath -Destination $master.Path -Force
-                Write-LicenseLog "Arquivo master copiado do pacote: $($master.Name)"
-            }
-            else {
-                Write-LicenseLog "AVISO: Arquivo master nao encontrado nem no pacote nem no destino: $($master.Name)"
-            }
+            Write-LicenseLog "ERRO: Arquivo master ausente no pacote: $($master.Name)"
+            throw "Arquivo master ausente: $($master.Name)"
         }
     }
 

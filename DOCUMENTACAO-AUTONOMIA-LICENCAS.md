@@ -5,18 +5,18 @@ Este documento explica como o sistema garante a ativação de licenças de forma
 ## Visão Geral
 
 - Os arquivos **Primavera.hlf** e **PRILIC.lic** estão incluídos no pacote na mesma pasta dos scripts.
-- Durante o setup e o licenciamento, os arquivos são copiados automaticamente para `C:\\PrimaveraLicenseVault\\Master`.
-- Se algum arquivo estiver ausente no pacote, o script alerta quais itens precisam ser adicionados manualmente.
+- Durante o setup e o licenciamento, os arquivos são lidos diretamente do pacote (sem cópia para `C:\\PrimaveraLicenseVault`).
+- Se algum arquivo estiver ausente no pacote, o script interrompe e alerta quais itens precisam ser adicionados manualmente.
 
 ## Fluxo Automático
 
 1. **Setup inicial** (`Setup-LicensingSystem.ps1`):
-   - Cria a estrutura `C:\\PrimaveraLicenseVault`.
-   - Copia automaticamente os arquivos de licença do pacote para a pasta `Master`.
-   - Exibe alertas somente se algum arquivo não foi encontrado no pacote.
+   - Cria apenas a estrutura de suporte (`Database`, `Backups` e `Logs`) em `C:\\PrimaveraLicenseVault`.
+   - Informa que os arquivos de licença serão usados diretamente do pacote.
+   - Interrompe somente se um arquivo essencial estiver ausente no pacote.
 
 2. **Licenciamento** (`License-Primavera.ps1`):
-   - Garante que os arquivos master existam em `Master`; se faltarem, replica os arquivos embutidos antes de prosseguir.
+   - Valida a presença dos arquivos embutidos diretamente na pasta do pacote antes de seguir.
    - Continua com o processo normal de cópia para as pastas do PRIMAVERA e agenda tarefas de expiração.
 
 ## Benefícios
@@ -27,9 +27,9 @@ Este documento explica como o sistema garante a ativação de licenças de forma
 
 ## Como Validar
 
-1. Execute `Setup-LicensingSystem.ps1` como administrador e verifique a mensagem `[COPIADO]` indicando a disponibilidade automática.
-2. Após o setup, confirme que `C:\\PrimaveraLicenseVault\\Master` contém `Primavera.hlf` e `PRILIC.lic`.
-3. Rode `LICENCIAR.bat` e prossiga normalmente; o script garantirá a presença dos arquivos antes de iniciar o licenciamento.
+1. Execute `Setup-LicensingSystem.ps1` como administrador e verifique a mensagem avisando que os arquivos serão usados diretamente do pacote.
+2. Confirme que os arquivos `Primavera.hlf` e `PRILIC.lic` estão na mesma pasta dos scripts do repositório.
+3. Rode `LICENCIAR.bat` e prossiga normalmente; o script verificará os arquivos embutidos antes de iniciar o licenciamento.
 
 Com esse fluxo, o licenciamento pode ser realizado em qualquer máquina compatível sem passos manuais adicionais.
 
