@@ -69,6 +69,16 @@ C:\PrimaveraLicenseVault\
     └── licensing.log
 ```
 
+### Passo 3: Gerar um único arquivo para levar ao cliente (opcional)
+
+Se preferir distribuir **apenas um arquivo**, gere o pacote auto-extraível com:
+
+```
+./Package-SingleFile.ps1
+```
+
+O script cria `LICENCIAR-UNICO.ps1`, que contém todo o pacote e, ao ser executado no cliente, extrai os arquivos para uma pasta temporária e chama automaticamente o `LICENCIAR.bat`. Consulte o guia detalhado em [`PACOTE-UNICO.md`](PACOTE-UNICO.md).
+
 ## 📝 Como Licenciar um Cliente
 
 ### Método Rápido (Recomendado)
