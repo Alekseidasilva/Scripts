@@ -9,6 +9,7 @@ Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Diretorios a criar
+$scriptRoot = Split-Path -Parent $PSCommandPath
 $vaultDir = "C:\PrimaveraLicenseVault"
 $directories = @(
     "$vaultDir",
@@ -89,32 +90,36 @@ C:\PrimaveraLicenseVault\
 $readmePath = "$vaultDir\Master\README.txt"
 $readmeMaster | Set-Content $readmePath
 
-Write-Host "=========================================" -ForegroundColor Yellow
-Write-Host "PROXIMO PASSO - IMPORTANTE!" -ForegroundColor Yellow
-Write-Host "=========================================" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "Copie os arquivos de licenca PRIMAVERA para:" -ForegroundColor White
-Write-Host ""
-Write-Host "  $vaultDir\Master\" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Arquivos necessarios:" -ForegroundColor White
-Write-Host "  1. Primavera.hlf" -ForegroundColor Green
-Write-Host "  2. PRILIC.lic" -ForegroundColor Green
-Write-Host ""
-Write-Host "Um arquivo README.txt foi criado na pasta Master" -ForegroundColor Gray
-Write-Host "com instrucoes detalhadas." -ForegroundColor Gray
-Write-Host ""
+# Copiar automaticamente os arquivos de licenca se estiverem no pacote
+$copied = 0
+$missing = @()
+$packageFiles = @(
+    @{ Name = "Primavera.hlf"; Target = "$vaultDir\Master\Primavera.hlf" },
+    @{ Name = "PRILIC.lic"; Target = "$vaultDir\Master\PRILIC.lic" }
+)
 
-# Perguntar se deseja abrir a pasta Master
-$response = Read-Host "Deseja abrir a pasta Master agora? (S/N)"
-if ($response -eq "S" -or $response -eq "s") {
-    Start-Process "explorer.exe" -ArgumentList "$vaultDir\Master"
-    Write-Host ""
-    Write-Host "Pasta aberta! Copie os arquivos de licenca para la." -ForegroundColor Green
+foreach ($file in $packageFiles) {
+    $source = Join-Path $scriptRoot $file.Name
+    if (Test-Path $source) {
+        Copy-Item $source -Destination $file.Target -Force
+        Write-Host "[COPIADO] $($file.Name) a partir do pacote" -ForegroundColor Green
+        $copied++
+    }
+    else {
+        $missing += $file.Name
+        Write-Host "[FALTA] $($file.Name) nao encontrado no pacote" -ForegroundColor Yellow
+    }
 }
 
-Write-Host ""
-Write-Host "Setup concluido!" -ForegroundColor Green
-Write-Host ""
-Write-Host "Pressione qualquer tecla para sair..."
+if ($copied -gt 0) {
+    Write-Host ""; Write-Host "Arquivos de licenca disponibilizados automaticamente." -ForegroundColor Green
+}
+
+if ($missing.Count -gt 0) {
+    Write-Host ""; Write-Host "ATENCAO: Copie manualmente os arquivos ausentes para $vaultDir\\Master" -ForegroundColor Yellow
+    Write-Host ("Pendentes: " + ($missing -join ", ")) -ForegroundColor Yellow
+}
+
+Write-Host ""; Write-Host "Setup concluido!" -ForegroundColor Green
+Write-Host ""; Write-Host "Pressione qualquer tecla para sair..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

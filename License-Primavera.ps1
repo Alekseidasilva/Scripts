@@ -10,6 +10,7 @@ Add-Type -AssemblyName System.Drawing
 #region Configuracao
 
 # Diretorios do sistema
+$scriptRoot = Split-Path -Parent $PSCommandPath
 $vaultDir = "C:\PrimaveraLicenseVault"
 $masterDir = "$vaultDir\Master"
 $databaseDir = "$vaultDir\Database"
@@ -52,6 +53,20 @@ function Initialize-LicenseSystem {
         if (-not (Test-Path $_)) {
             New-Item -ItemType Directory -Path $_ -Force | Out-Null
             Write-LicenseLog "Diretorio criado: $_"
+        }
+    }
+
+    # Garantir que os arquivos master estao presentes na pasta local
+    foreach ($master in $masterFiles) {
+        if (-not (Test-Path $master.Path)) {
+            $embeddedPath = Join-Path $scriptRoot $master.Name
+            if (Test-Path $embeddedPath) {
+                Copy-Item $embeddedPath -Destination $master.Path -Force
+                Write-LicenseLog "Arquivo master copiado do pacote: $($master.Name)"
+            }
+            else {
+                Write-LicenseLog "AVISO: Arquivo master nao encontrado nem no pacote nem no destino: $($master.Name)"
+            }
         }
     }
 

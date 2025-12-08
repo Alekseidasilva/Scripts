@@ -43,15 +43,15 @@ Este sistema permite licenciar clientes do PRIMAVERA instalando os arquivos de l
 
 ### Passo 1: Preparar Arquivos Master
 
-Antes de licenciar, você precisa ter os arquivos master de licença:
+Os arquivos de licença já acompanham este pacote. O sistema copia automaticamente os arquivos master para a pasta de trabalho. Caso precise validar manualmente, confirme se a estrutura está assim:
 
 ```
 C:\PrimaveraLicenseVault\Master\
-├── Primavera.hlf   (arquivo master original)
-└── PRILIC.lic      (arquivo master original)
+├── Primavera.hlf   (arquivo master do pacote)
+└── PRILIC.lic      (arquivo master do pacote)
 ```
 
-**IMPORTANTE:** Coloque os arquivos originais de licença nesta pasta!
+**IMPORTANTE:** Se algum arquivo master estiver ausente, copie-o para a pasta `Master` e execute novamente o licenciamento.
 
 ### Passo 2: Verificar Estrutura
 
@@ -59,9 +59,9 @@ O sistema criará automaticamente a seguinte estrutura:
 
 ```
 C:\PrimaveraLicenseVault\
-├── Master\             (arquivos originais - VOCÊ CRIA)
-│   ├── Primavera.hlf
-│   └── PRILIC.lic
+├── Master\             (arquivos originais - AUTO/VALIDAÇÃO)
+│   ├── Primavera.hlf    (copiado do pacote)
+│   └── PRILIC.lic       (copiado do pacote)
 ├── Database\           (base de dados - AUTO)
 │   └── licenses.json
 ├── Backups\            (backups automáticos - AUTO)
