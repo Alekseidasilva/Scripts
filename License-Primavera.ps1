@@ -10,8 +10,9 @@ Add-Type -AssemblyName System.Drawing
 #region Configuracao
 
 # Diretorios do sistema
+$scriptRoot = Split-Path -Parent $PSCommandPath
 $vaultDir = "C:\PrimaveraLicenseVault"
-$masterDir = "$vaultDir\Master"
+$masterDir = $scriptRoot
 $databaseDir = "$vaultDir\Database"
 $backupDir = "$vaultDir\Backups"
 $logsDir = "$vaultDir\Logs"
@@ -40,6 +41,12 @@ $licensePeriods = @{
 
 function Write-LicenseLog {
     param([string]$Message)
+    if (-not (Test-Path $logsDir)) {
+        New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
+    }
+    if (-not (Test-Path $logFile)) {
+        New-Item -ItemType File -Path $logFile -Force | Out-Null
+    }
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $logMessage = "[$timestamp] $Message"
     Add-Content -Path $logFile -Value $logMessage
@@ -48,10 +55,40 @@ function Write-LicenseLog {
 
 function Initialize-LicenseSystem {
     # Criar diretorios se nao existirem
-    @($vaultDir, $masterDir, $databaseDir, $backupDir, $logsDir) | ForEach-Object {
+    @($vaultDir, $databaseDir, $backupDir, $logsDir) | ForEach-Object {
         if (-not (Test-Path $_)) {
             New-Item -ItemType Directory -Path $_ -Force | Out-Null
             Write-LicenseLog "Diretorio criado: $_"
+        }
+    }
+
+    # Proteger todos os arquivos do pacote, exceto o iniciador principal
+    Protect-PackageFiles -PackageRoot $scriptRoot -MainEntry "LICENCIAR.bat"
+
+    # Validar arquivos master diretamente do pacote
+    foreach ($master in $masterFiles) {
+        if (-not (Test-Path -LiteralPath $master.Path)) {
+            $missingMessage = "ERRO: Arquivo master ausente ou inacessivel no pacote: $($master.Name). Confirme que ele foi distribuido junto ao LICENCIAR.bat."
+            Write-LicenseLog $missingMessage
+            [System.Windows.Forms.MessageBox]::Show($missingMessage, "Arquivo master ausente", "OK", "Error") | Out-Null
+            return $false
+        }
+
+        try {
+            # Garantir atributos oculto e somente leitura
+            $item = Get-Item -LiteralPath $master.Path -ErrorAction Stop
+            $desiredAttributes = [System.IO.FileAttributes]::Hidden -bor [System.IO.FileAttributes]::ReadOnly
+            $newAttributes = $item.Attributes -bor $desiredAttributes
+            if ($newAttributes -ne $item.Attributes) {
+                Set-ItemProperty -Path $master.Path -Name Attributes -Value $newAttributes
+                Write-LicenseLog "Atributos aplicados (oculto e somente leitura): $($master.Path)"
+            }
+        }
+        catch {
+            $attrMessage = "ERRO ao ler ou aplicar atributos no arquivo master $($master.Name): $($_.Exception.Message)"
+            Write-LicenseLog $attrMessage
+            [System.Windows.Forms.MessageBox]::Show($attrMessage, "Erro ao proteger masters", "OK", "Error") | Out-Null
+            return $false
         }
     }
 
@@ -64,6 +101,37 @@ function Initialize-LicenseSystem {
         }
         $emptyDb | ConvertTo-Json -Depth 10 | Set-Content $databaseFile
         Write-LicenseLog "Base de dados criada: $databaseFile"
+    }
+    return $true
+}
+
+function Protect-PackageFiles {
+    param(
+        [string]$PackageRoot,
+        [string]$MainEntry
+    )
+
+    $hiddenFlag = [System.IO.FileAttributes]::Hidden
+    $readOnlyFlag = [System.IO.FileAttributes]::ReadOnly
+
+    Get-ChildItem -Path $PackageRoot -File -Recurse | ForEach-Object {
+        $file = $_
+
+        if ($file.Name -ieq $MainEntry) {
+            return
+        }
+
+        $newAttributes = $file.Attributes -bor $hiddenFlag -bor $readOnlyFlag
+
+        if ($newAttributes -ne $file.Attributes) {
+            try {
+                Set-ItemProperty -Path $file.FullName -Name Attributes -Value $newAttributes
+                Write-LicenseLog "Arquivo encapsulado (oculto/somente leitura): $($file.FullName)"
+            }
+            catch {
+                Write-LicenseLog "Aviso: nao foi possivel encapsular $($file.FullName): $($_.Exception.Message)"
+            }
+        }
     }
 }
 
@@ -426,9 +494,14 @@ function Show-LicensingForm {
 #region Main
 
 # Inicializar sistema
-Initialize-LicenseSystem
+$initialized = Initialize-LicenseSystem
 
-Write-LicenseLog "=========================================
+if (-not $initialized) {
+    Write-LicenseLog "Inicializacao interrompida: masters ausentes ou inacessiveis."
+    exit 1
+}
+
+Write-LicenseLog "========================================="
 Write-LicenseLog "Iniciando processo de licenciamento PRIMAVERA"
 
 # Verificar se arquivos master existem

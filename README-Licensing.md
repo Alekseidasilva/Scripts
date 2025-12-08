@@ -43,25 +43,24 @@ Este sistema permite licenciar clientes do PRIMAVERA instalando os arquivos de l
 
 ### Passo 1: Preparar Arquivos Master
 
-Antes de licenciar, você precisa ter os arquivos master de licença:
+Os arquivos de licença já acompanham este pacote e são usados diretamente daqui, sem cópia para `C:\PrimaveraLicenseVault`. Confirme que eles estão na mesma pasta que os scripts:
 
 ```
-C:\PrimaveraLicenseVault\Master\
-├── Primavera.hlf   (arquivo master original)
-└── PRILIC.lic      (arquivo master original)
+[PastaDoPacote]\
+├── Primavera.hlf   (arquivo master do pacote)
+└── PRILIC.lic      (arquivo master do pacote)
 ```
 
-**IMPORTANTE:** Coloque os arquivos originais de licença nesta pasta!
+**IMPORTANTE:** Se algum arquivo master estiver ausente, adicione-o ao pacote antes de executar o licenciamento. O script marca automaticamente `Primavera.hlf` e `PRILIC.lic` como **ocultos e somente leitura** ao iniciar, mantendo-os protegidos na pasta do pacote.
+
+**Encapsulamento automático:** todos os demais arquivos do pacote (scripts, documentação e utilitários) são marcados como **ocultos** e **somente leitura** durante a inicialização, preservando acessível apenas o `LICENCIAR.bat` para o operador.
 
 ### Passo 2: Verificar Estrutura
 
-O sistema criará automaticamente a seguinte estrutura:
+O sistema criará automaticamente apenas a estrutura de apoio para base, backups e logs:
 
 ```
 C:\PrimaveraLicenseVault\
-├── Master\             (arquivos originais - VOCÊ CRIA)
-│   ├── Primavera.hlf
-│   └── PRILIC.lic
 ├── Database\           (base de dados - AUTO)
 │   └── licenses.json
 ├── Backups\            (backups automáticos - AUTO)
@@ -69,6 +68,16 @@ C:\PrimaveraLicenseVault\
 └── Logs\               (logs de operações - AUTO)
     └── licensing.log
 ```
+
+### Passo 3: Gerar um único arquivo para levar ao cliente (opcional)
+
+Se preferir distribuir **apenas um arquivo**, gere o pacote auto-extraível com:
+
+```
+./Package-SingleFile.ps1
+```
+
+O script cria `LICENCIAR-UNICO.ps1`, que contém todo o pacote e, ao ser executado no cliente, extrai os arquivos para uma pasta temporária e chama automaticamente o `LICENCIAR.bat`. Consulte o guia detalhado em [`PACOTE-UNICO.md`](PACOTE-UNICO.md).
 
 ## 📝 Como Licenciar um Cliente
 
@@ -187,7 +196,7 @@ Se a remoção falhar na data de expiração:
       "files": [
         {
           "name": "Primavera.hlf",
-          "sourcePath": "C:\\PrimaveraLicenseVault\\Master\\Primavera.hlf",
+          "sourcePath": "C:\\PacoteLicenciamento\\Primavera.hlf",
           "targetPath": "C:\\Program Files (x86)\\PRIMAVERA\\SG100\\Config\\LP\\Primavera.hlf",
           "hash": "SHA256:abc123...",
           "timestamp": "2026-01-15T10:00:00"
@@ -267,10 +276,8 @@ Algoritmo completo de validação de NIF português:
 ### "Arquivos master não encontrados"
 
 **Solução:**
-1. Crie a pasta: `C:\PrimaveraLicenseVault\Master\`
-2. Copie os arquivos originais:
-   - Primavera.hlf
-   - PRILIC.lic
+1. Confirme que `Primavera.hlf` e `PRILIC.lic` estão na mesma pasta do script `License-Primavera.ps1`.
+2. Se estiverem ausentes, extraia-os do repositório ou solicite novos arquivos e coloque-os no pacote antes de executar novamente.
 
 ### "Erro ao copiar arquivos"
 
