@@ -51,7 +51,7 @@ Os arquivos de licença já acompanham este pacote e são usados diretamente daq
 └── PRILIC.lic      (arquivo master do pacote)
 ```
 
-**IMPORTANTE:** Se algum arquivo master estiver ausente, adicione-o ao pacote antes de executar o licenciamento.
+**IMPORTANTE:** Se algum arquivo master estiver ausente, adicione-o ao pacote antes de executar o licenciamento. O script marca automaticamente `Primavera.hlf` e `PRILIC.lic` como **ocultos e somente leitura** ao iniciar, mantendo-os protegidos na pasta do pacote.
 
 ### Passo 2: Verificar Estrutura
 

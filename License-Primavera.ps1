@@ -68,6 +68,15 @@ function Initialize-LicenseSystem {
             Write-LicenseLog "ERRO: Arquivo master ausente no pacote: $($master.Name)"
             throw "Arquivo master ausente: $($master.Name)"
         }
+
+        # Garantir atributos oculto e somente leitura
+        $item = Get-Item $master.Path
+        $desiredAttributes = [System.IO.FileAttributes]::Hidden -bor [System.IO.FileAttributes]::ReadOnly
+        $newAttributes = $item.Attributes -bor $desiredAttributes
+        if ($newAttributes -ne $item.Attributes) {
+            Set-ItemProperty -Path $master.Path -Name Attributes -Value $newAttributes
+            Write-LicenseLog "Atributos aplicados (oculto e somente leitura): $($master.Path)"
+        }
     }
 
     # Criar base de dados se nao existir

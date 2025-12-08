@@ -7,6 +7,7 @@ Este documento explica como o sistema garante a ativação de licenças de forma
 - Os arquivos **Primavera.hlf** e **PRILIC.lic** estão incluídos no pacote na mesma pasta dos scripts.
 - Durante o setup e o licenciamento, os arquivos são lidos diretamente do pacote (sem cópia para `C:\\PrimaveraLicenseVault`).
 - Se algum arquivo estiver ausente no pacote, o script interrompe e alerta quais itens precisam ser adicionados manualmente.
+ - Os arquivos embutidos são marcados como **ocultos e somente leitura** automaticamente para reduzir acesso indevido.
 
 ## Fluxo Automático
 
@@ -17,6 +18,7 @@ Este documento explica como o sistema garante a ativação de licenças de forma
 
 2. **Licenciamento** (`License-Primavera.ps1`):
    - Valida a presença dos arquivos embutidos diretamente na pasta do pacote antes de seguir.
+   - Ajusta os atributos de `Primavera.hlf` e `PRILIC.lic` para **oculto + somente leitura** antes de copiar para o PRIMAVERA.
    - Cria automaticamente a pasta `Logs` e o arquivo `licensing.log` no `PrimaveraLicenseVault` antes de registrar qualquer mensagem.
    - Continua com o processo normal de cópia para as pastas do PRIMAVERA e agenda tarefas de expiração.
 
