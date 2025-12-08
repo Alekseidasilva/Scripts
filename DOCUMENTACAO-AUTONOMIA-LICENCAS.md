@@ -32,3 +32,9 @@ Este documento explica como o sistema garante a ativação de licenças de forma
 3. Rode `LICENCIAR.bat` e prossiga normalmente; o script garantirá a presença dos arquivos antes de iniciar o licenciamento.
 
 Com esse fluxo, o licenciamento pode ser realizado em qualquer máquina compatível sem passos manuais adicionais.
+
+## Solução de Problemas Rápida
+
+- Se o `License-Primavera.ps1` exibir erro de sintaxe logo ao iniciar, verifique se a linha de separador do log está completa:
+  `Write-LicenseLog "========================================="`. Restaure a linha exatamente como acima para evitar falhas de
+  parsing que impedem o carregamento do formulário de licenciamento.

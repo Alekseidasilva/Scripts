@@ -443,7 +443,7 @@ function Show-LicensingForm {
 # Inicializar sistema
 Initialize-LicenseSystem
 
-Write-LicenseLog "=========================================
+Write-LicenseLog "========================================="
 Write-LicenseLog "Iniciando processo de licenciamento PRIMAVERA"
 
 # Verificar se arquivos master existem
