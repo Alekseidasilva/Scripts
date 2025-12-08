@@ -62,11 +62,13 @@ Ferramentas para renovação de licenças existentes.
 ### Para Criar um Setup de Licenciamento
 
 ```batch
-# Setup com Wizard (Recomendado - Interface profissional)
-CRIAR-SETUP-WIZARD.bat
+# EXECUTÁVEL .EXE (Mais Profissional - Recomendado para técnicos)
+CRIAR-EXE-WIZARD.bat        # Wizard com 5 etapas
+CRIAR-EXE-SIMPLES.bat       # Formulário simples
 
-# Setup com Formulário Simples (Rápido - Uma tela)
-CRIAR-SETUP.bat
+# SCRIPT .PS1 (Para uso interno/desenvolvimento)
+CRIAR-SETUP-WIZARD.bat      # Wizard com 5 etapas
+CRIAR-SETUP.bat             # Formulário simples
 ```
 
 ### Para Licenciar Manualmente (sem setup)
@@ -84,7 +86,8 @@ CONSULTAR-LICENCAS.bat
 
 ## 📚 Documentação Detalhada
 
-- **[Wizard de Licenciamento](README-Wizard.md)** - Interface wizard profissional (RECOMENDADO)
+- **[Executáveis (.exe)](README-Executavel.md)** - Criar executáveis profissionais (RECOMENDADO PARA DISTRIBUIÇÃO)
+- **[Wizard de Licenciamento](README-Wizard.md)** - Interface wizard profissional
 - **[Setup de Licenciamento](README-Setup-Licenciamento.md)** - Interface formulário simples
 - **[Licenciamento](README-Licensing.md)** - Sistema de licenciamento e renovação
 - **[Limpeza PRIMAVERA](README-PrimaveraCleanup.md)** - Sistema de limpeza anual
@@ -93,12 +96,27 @@ CONSULTAR-LICENCAS.bat
 
 ## 🛠️ Arquivos Principais
 
+### Geradores de Executáveis (.exe) - Distribuição
 | Arquivo | Descrição |
 |---------|-----------|
-| `CRIAR-SETUP-WIZARD.bat` | ⭐⭐⭐ Criar setup com Wizard (RECOMENDADO) |
-| `CRIAR-SETUP.bat` | ⭐⭐ Criar setup com formulário simples |
+| `CRIAR-EXE-WIZARD.bat` | 💾⭐⭐⭐ Criar .exe com Wizard (RECOMENDADO) |
+| `CRIAR-EXE-SIMPLES.bat` | 💾⭐⭐ Criar .exe com formulário simples |
+
+### Geradores de Scripts (.ps1) - Desenvolvimento
+| Arquivo | Descrição |
+|---------|-----------|
+| `CRIAR-SETUP-WIZARD.bat` | 🧙‍♂️⭐⭐ Criar .ps1 com Wizard |
+| `CRIAR-SETUP.bat` | 📝⭐ Criar .ps1 com formulário simples |
+
+### Licenciamento Local
+| Arquivo | Descrição |
+|---------|-----------|
 | `LICENCIAR-WIZARD.bat` | 🧙‍♂️ Licenciar com interface wizard |
 | `LICENCIAR.bat` | 📝 Licenciar com formulário simples |
+
+### Gestão de Licenças
+| Arquivo | Descrição |
+|---------|-----------|
 | `CONSULTAR-LICENCAS.bat` | 📊 Consultar licenças ativas |
 | `RENOVAR-LICENCA.bat` | 🔄 Renovar licença existente |
 | `DESINSTALAR.bat` | 🗑️ Desinstalar sistema de licenciamento |
