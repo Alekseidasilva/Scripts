@@ -471,9 +471,9 @@ $startDate = Get-Date
 $periodInfo = $licensePeriods[$licenseData.Period]
 $expiryDate = $startDate.AddDays($periodInfo.Days)
 
-Write-LicenseLog "ID de Licenca: $licenseId"
-Write-LicenseLog "Periodo: $($periodInfo.Label) ($($periodInfo.Days) dias)"
-Write-LicenseLog "Data de Expiracao: $($expiryDate.ToString('dd/MM/yyyy HH:mm'))"
+Write-LicenseLog ("ID de Licenca: " + $licenseId)
+Write-LicenseLog ("Periodo: " + $periodInfo.Label + " (" + $periodInfo.Days + " dias)")
+Write-LicenseLog ("Expiracao: " + $expiryDate.ToString('dd/MM/yyyy HH:mm'))
 
 # Obter caminhos de destino
 $targetPaths = Get-TargetPaths
@@ -481,10 +481,10 @@ $targetPaths = Get-TargetPaths
 # Copiar arquivos de licenca
 try {
     $copiedFiles = Copy-LicenseFiles -LicenseId $licenseId -TargetPaths $targetPaths
-    Write-LicenseLog "Arquivos de licenca copiados com sucesso ($($copiedFiles.Count) arquivo(s))"
+    Write-LicenseLog ("Arquivos de licenca copiados: " + $copiedFiles.Count)
 }
 catch {
-    Write-LicenseLog "ERRO ao copiar arquivos: $($_.Exception.Message)"
+    Write-LicenseLog ("Erro ao copiar arquivos: " + $_.Exception.Message)
     [System.Windows.Forms.MessageBox]::Show(
         "Erro ao copiar arquivos de licenca:`n`n$($_.Exception.Message)",
         "Erro",
@@ -541,8 +541,8 @@ Cliente: $($licenseData.CompanyName)
 NIF: $($licenseData.NIF)
 
 Periodo: $($periodInfo.Label)
-Data de Inicio: $($startDate.ToString('dd/MM/yyyy HH:mm'))
-Data de Expiracao: $($expiryDate.ToString('dd/MM/yyyy HH:mm'))
+Inicio: $($startDate.ToString('dd/MM/yyyy HH:mm'))
+Expiracao: $($expiryDate.ToString('dd/MM/yyyy HH:mm'))
 
 Arquivos copiados: $($copiedFiles.Count)
 Remocao automatica: $(if ($scheduled) { "Agendada" } else { "Nao agendada" })
