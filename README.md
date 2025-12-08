@@ -8,20 +8,42 @@ Coleção de scripts para gerenciamento e licenciamento do sistema PRIMAVERA.
 
 Sistema completo de licenciamento com setup autoextraível e agendamento automático de exclusão.
 
+**Duas Interfaces Disponíveis**:
+
+#### 🧙‍♂️ Wizard (Recomendado)
+Interface profissional com múltiplas etapas guiadas
+
 **Características**:
-- Setup em arquivo único autocontido
-- Interface gráfica para licenciamento
-- Escolha de período de licença (3m, 6m, 1a, 2a)
-- **Agendamento automático de exclusão** baseado no período escolhido
-- Sistema de retry inteligente
+- **5 etapas** com navegação Avançar/Voltar
+- Interface moderna e intuitiva
+- Validação em tempo real
+- Barra de progresso durante instalação
+- **Agendamento automático de exclusão**
+
+**Como usar**:
+1. Execute `CRIAR-SETUP-WIZARD.bat` como Administrador
+2. Distribua o arquivo `SETUP-WIZARD-PRIMAVERA.ps1` gerado
+3. O técnico/cliente segue as etapas do wizard
+4. A licença será removida automaticamente ao expirar
+
+**Documentação**: [README-Wizard.md](README-Wizard.md)
+
+#### 📝 Formulário Simples
+Interface rápida em uma única tela
+
+**Características**:
+- Formulário único consolidado
+- Validação de NIF e email
+- Escolha de período (3m, 6m, 1a, 2a)
+- **Agendamento automático de exclusão**
 
 **Como usar**:
 1. Execute `CRIAR-SETUP.bat` como Administrador
 2. Distribua o arquivo `SETUP-LICENCIAMENTO-PRIMAVERA.ps1` gerado
-3. O técnico/cliente executa o setup e escolhe o período
+3. O técnico/cliente preenche e confirma
 4. A licença será removida automaticamente ao expirar
 
-**Documentação completa**: [README-Setup-Licenciamento.md](README-Setup-Licenciamento.md)
+**Documentação**: [README-Setup-Licenciamento.md](README-Setup-Licenciamento.md)
 
 ### 🗑️ Sistema de Limpeza Anual PRIMAVERA
 
@@ -40,7 +62,10 @@ Ferramentas para renovação de licenças existentes.
 ### Para Criar um Setup de Licenciamento
 
 ```batch
-# Execute como Administrador
+# Setup com Wizard (Recomendado - Interface profissional)
+CRIAR-SETUP-WIZARD.bat
+
+# Setup com Formulário Simples (Rápido - Uma tela)
 CRIAR-SETUP.bat
 ```
 
@@ -59,7 +84,8 @@ CONSULTAR-LICENCAS.bat
 
 ## 📚 Documentação Detalhada
 
-- **[Setup de Licenciamento](README-Setup-Licenciamento.md)** - Sistema completo com agendamento automático
+- **[Wizard de Licenciamento](README-Wizard.md)** - Interface wizard profissional (RECOMENDADO)
+- **[Setup de Licenciamento](README-Setup-Licenciamento.md)** - Interface formulário simples
 - **[Licenciamento](README-Licensing.md)** - Sistema de licenciamento e renovação
 - **[Limpeza PRIMAVERA](README-PrimaveraCleanup.md)** - Sistema de limpeza anual
 - **[Autonomia de Licenças](DOCUMENTACAO-AUTONOMIA-LICENCAS.md)** - Documentação técnica
@@ -69,11 +95,13 @@ CONSULTAR-LICENCAS.bat
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `CRIAR-SETUP.bat` | ⭐ Criar setup autocontido de licenciamento |
-| `LICENCIAR.bat` | Licenciar sistema manualmente |
-| `CONSULTAR-LICENCAS.bat` | Consultar licenças ativas |
-| `RENOVAR-LICENCA.bat` | Renovar licença existente |
-| `DESINSTALAR.bat` | Desinstalar sistema de licenciamento |
+| `CRIAR-SETUP-WIZARD.bat` | ⭐⭐⭐ Criar setup com Wizard (RECOMENDADO) |
+| `CRIAR-SETUP.bat` | ⭐⭐ Criar setup com formulário simples |
+| `LICENCIAR-WIZARD.bat` | 🧙‍♂️ Licenciar com interface wizard |
+| `LICENCIAR.bat` | 📝 Licenciar com formulário simples |
+| `CONSULTAR-LICENCAS.bat` | 📊 Consultar licenças ativas |
+| `RENOVAR-LICENCA.bat` | 🔄 Renovar licença existente |
+| `DESINSTALAR.bat` | 🗑️ Desinstalar sistema de licenciamento |
 
 ## ⚙️ Requisitos
 
