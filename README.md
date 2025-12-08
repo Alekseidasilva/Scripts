@@ -92,7 +92,6 @@ CONSULTAR-LICENCAS.bat
 - **[Licenciamento](README-Licensing.md)** - Sistema de licenciamento e renovação
 - **[Limpeza PRIMAVERA](README-PrimaveraCleanup.md)** - Sistema de limpeza anual
 - **[Autonomia de Licenças](DOCUMENTACAO-AUTONOMIA-LICENCAS.md)** - Documentação técnica
-- **[Pacote Único](PACOTE-UNICO.md)** - Como criar pacotes únicos
 
 ## 🛠️ Arquivos Principais
 
