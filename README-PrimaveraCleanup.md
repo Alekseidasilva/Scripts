@@ -22,28 +22,38 @@ Este script agenda a eliminação anual dos seguintes arquivos:
 
 ## 📦 Arquivos Incluídos
 
-1. **Install-PrimaveraCleanupTask.ps1** - Script de instalação (executar uma única vez)
-2. **Delete-PrimaveraFiles.ps1** - Script principal que deleta os arquivos
-3. **README-PrimaveraCleanup.md** - Este arquivo de documentação
+1. **INSTALAR.bat** ⭐ - Atalho para instalação (duplo clique)
+2. **DESINSTALAR.bat** - Atalho para desinstalação (duplo clique)
+3. **Install-PrimaveraCleanupTask.ps1** - Script PowerShell de instalação
+4. **Delete-PrimaveraFiles.ps1** - Script principal que deleta os arquivos
+5. **README-PrimaveraCleanup.md** - Este arquivo de documentação
 
 ## 🚀 Como Instalar
 
-### Passo 1: Baixar os Scripts
+### ⚡ Método Rápido (Recomendado)
 
-Certifique-se que ambos os arquivos `.ps1` estão na mesma pasta.
+1. **Clique com botão direito** em `INSTALAR.bat`
+2. Selecione **"Executar como Administrador"**
+3. Confirme o UAC (controle de conta de usuário)
+4. Aguarde a mensagem de sucesso
 
-### Passo 2: Executar como Administrador
+**✨ É isso! A instalação está completa.**
+
+### 📋 Método Alternativo (PowerShell)
+
+Se preferir executar o script PowerShell diretamente:
 
 1. Clique com o **botão direito** em `Install-PrimaveraCleanupTask.ps1`
 2. Selecione **"Executar com PowerShell"** ou **"Executar como Administrador"**
 3. Se aparecer aviso de segurança, clique em **"Executar uma vez"** ou **"Sim"**
 
-### Passo 3: Confirmar Instalação
+### ✅ Confirmação de Instalação
 
-Você verá uma mensagem confirmando:
-- Nome da tarefa criada
-- Data da próxima execução
-- Arquivos que serão deletados
+Após a instalação, você verá:
+- ✓ Nome da tarefa criada
+- ✓ Data da próxima execução (01/01/2026)
+- ✓ Arquivos que serão deletados
+- ✓ Sistema de retry progressivo configurado
 
 ## 🔍 Como Verificar
 
@@ -113,7 +123,16 @@ A cada execução, o script verifica:
 
 ## ❌ Como Desinstalar
 
-### Opção 1: Via PowerShell (Recomendado)
+### ⚡ Método Rápido (Recomendado)
+
+1. **Clique com botão direito** em `DESINSTALAR.bat`
+2. Selecione **"Executar como Administrador"**
+3. Confirme quando perguntado
+4. Escolha se deseja deletar os logs
+
+**✨ Pronto! Tudo foi removido.**
+
+### 📋 Opção 2: Via PowerShell
 
 Execute como Administrador:
 ```powershell
@@ -121,20 +140,29 @@ Unregister-ScheduledTask -TaskName "PRIMAVERA_Annual_Cleanup" -Confirm:$false
 Unregister-ScheduledTask -TaskName "PRIMAVERA_Cleanup_Retry" -Confirm:$false -ErrorAction SilentlyContinue
 ```
 
-### Opção 2: Via Interface Gráfica
+### 📋 Opção 3: Via Interface Gráfica
 
 1. Abra o Agendador de Tarefas (`Win + R` → `taskschd.msc`)
 2. Localize **"PRIMAVERA_Annual_Cleanup"**
 3. Clique com botão direito → **Excluir**
 4. Repita para **"PRIMAVERA_Cleanup_Retry"** se existir
 
-### Opção 3: Deletar Arquivos de Log (Opcional)
+### 🗑️ Deletar Logs Manualmente
 
+Se não usou o desinstalador automático:
 ```
 C:\ProgramData\PrimaveraCleanup\
 ```
 
 ## 🔧 Solução de Problemas
+
+### "Arquivo .ps1 abre no Bloco de Notas ao clicar"
+
+**Solução:** Isso é normal no Windows por segurança. Use uma das opções:
+
+1. **Opção mais fácil:** Use o arquivo `INSTALAR.bat` (duplo clique)
+2. **Opção 2:** Clique com **botão direito** no `.ps1` → **"Executar com PowerShell"**
+3. **Opção 3:** Clique com **botão direito** → **"Executar como Administrador"**
 
 ### "Não é possível executar scripts neste sistema"
 
@@ -142,6 +170,8 @@ Execute como Administrador:
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
+
+**Nota:** O arquivo `INSTALAR.bat` já contorna esse problema automaticamente.
 
 ### Arquivos Não São Deletados
 
@@ -197,8 +227,14 @@ Para problemas ou dúvidas:
 
 ---
 
-**Versão:** 2.0
+**Versão:** 2.1
 **Última atualização:** Dezembro 2025
+
+**Changelog v2.1:**
+- 🚀 Arquivos .bat para instalação/desinstalação com um clique
+- 📝 Desinstalador automático com opção de remover logs
+- 📚 Instruções simplificadas no README
+
 **Changelog v2.0:**
 - ✨ Retry progressivo com múltiplas tentativas (5, 10, 15 dias)
 - ✨ Busca automática em múltiplas localizações do PRIMAVERA
