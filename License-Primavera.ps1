@@ -71,7 +71,7 @@ function Initialize-LicenseSystem {
             $missingMessage = "ERRO: Arquivo master ausente ou inacessivel no pacote: $($master.Name). Confirme que ele foi distribuido junto ao LICENCIAR.bat."
             Write-LicenseLog $missingMessage
             [System.Windows.Forms.MessageBox]::Show($missingMessage, "Arquivo master ausente", "OK", "Error") | Out-Null
-            throw $missingMessage
+            return $false
         }
 
         try {
@@ -87,7 +87,8 @@ function Initialize-LicenseSystem {
         catch {
             $attrMessage = "ERRO ao ler ou aplicar atributos no arquivo master $($master.Name): $($_.Exception.Message)"
             Write-LicenseLog $attrMessage
-            throw $attrMessage
+            [System.Windows.Forms.MessageBox]::Show($attrMessage, "Erro ao proteger masters", "OK", "Error") | Out-Null
+            return $false
         }
     }
 
@@ -101,6 +102,7 @@ function Initialize-LicenseSystem {
         $emptyDb | ConvertTo-Json -Depth 10 | Set-Content $databaseFile
         Write-LicenseLog "Base de dados criada: $databaseFile"
     }
+    return $true
 }
 
 function Protect-PackageFiles {
@@ -492,7 +494,12 @@ function Show-LicensingForm {
 #region Main
 
 # Inicializar sistema
-Initialize-LicenseSystem
+$initialized = Initialize-LicenseSystem
+
+if (-not $initialized) {
+    Write-LicenseLog "Inicializacao interrompida: masters ausentes ou inacessiveis."
+    exit 1
+}
 
 Write-LicenseLog "========================================="
 Write-LicenseLog "Iniciando processo de licenciamento PRIMAVERA"

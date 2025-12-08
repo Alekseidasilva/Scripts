@@ -46,3 +46,6 @@ Com esse fluxo, o licenciamento pode ser realizado em qualquer máquina compatí
 - Se surgir um aviso de **arquivo master ausente** (ex.: `Primavera.hlf` ou `PRILIC.lic`), confirme que ambos estão na mesma
   pasta que o `LICENCIAR.bat`. Sem esses arquivos o licenciamento é interrompido de propósito para evitar uma ativação
   incompleta. Reponha os arquivos a partir do repositório e execute novamente.
+- Caso o script não consiga ler ou proteger os arquivos master (por exemplo, bloqueio de antivírus), ele registra o erro,
+  mostra o alerta e encerra a inicialização sem continuar o licenciamento. Remova o bloqueio, confirme a presença dos
+  masters e execute o `LICENCIAR.bat` novamente.
