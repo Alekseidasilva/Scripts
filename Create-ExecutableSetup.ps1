@@ -179,7 +179,8 @@ pause
 "@
 
     $launcherPath = Join-Path $tempDir "setup_launcher.bat"
-    Set-Content -Path $launcherPath -Value $launcherScript -Encoding ASCII
+    # Usar encoding Default (ANSI) para compatibilidade com batch
+    [System.IO.File]::WriteAllText($launcherPath, $launcherScript, [System.Text.Encoding]::Default)
     Write-Host "  Launcher criado: setup_launcher.bat" -ForegroundColor Gray
     Write-Host ""
 
@@ -190,18 +191,26 @@ pause
     $sedFile = Join-Path $tempDir "setup.sed"
 
     # Construir lista de arquivos
-    $fileList = @("setup_launcher.bat") + $requiredFiles
-    $fileSection = ""
-    $fileCount = 0
-    foreach ($file in $fileList) {
-        $fileSection += "FILE$fileCount=`"$file`"`r`n"
-        $fileCount++
+    $allFiles = @("setup_launcher.bat") + $requiredFiles
+
+    # Criar seções do arquivo SED
+    $stringsSection = ""
+    $sourceFilesSection = ""
+
+    for ($i = 0; $i -lt $allFiles.Count; $i++) {
+        $stringsSection += "FILE$i=`"$($allFiles[$i])`"`r`n"
+        $sourceFilesSection += "%FILE$i%=`r`n"
     }
+
+    # Remover última quebra de linha
+    $stringsSection = $stringsSection.TrimEnd("`r`n")
+    $sourceFilesSection = $sourceFilesSection.TrimEnd("`r`n")
 
     $sedContent = @"
 [Version]
 Class=IEXPRESS
 SEDVersion=3
+
 [Options]
 PackagePurpose=InstallApp
 ShowInstallProgramWindow=1
@@ -232,21 +241,18 @@ AppLaunched=cmd /c setup_launcher.bat
 PostInstallCmd=<None>
 AdminQuietInstCmd=
 UserQuietInstCmd=
-FILE0="setup_launcher.bat"
-$fileSection
+$stringsSection
 
 [SourceFiles]
 SourceFiles0=$tempDir
+
 [SourceFiles0]
-%FILE0%=
+$sourceFilesSection
 "@
 
-    # Adicionar arquivos restantes ao SED
-    for ($i = 1; $i -lt $fileCount; $i++) {
-        $sedContent += "%FILE$i%=`r`n"
-    }
-
-    Set-Content -Path $sedFile -Value $sedContent -Encoding ASCII
+    # Salvar com encoding ASCII (sem BOM)
+    $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+    [System.IO.File]::WriteAllText($sedFile, $sedContent, $Utf8NoBomEncoding)
     Write-Host "  Configuracao criada: setup.sed" -ForegroundColor Gray
     Write-Host ""
 
