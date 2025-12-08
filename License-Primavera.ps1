@@ -62,6 +62,9 @@ function Initialize-LicenseSystem {
         }
     }
 
+    # Proteger todos os arquivos do pacote, exceto o iniciador principal
+    Protect-PackageFiles -PackageRoot $scriptRoot -MainEntry "LICENCIAR.bat"
+
     # Validar arquivos master diretamente do pacote
     foreach ($master in $masterFiles) {
         if (-not (Test-Path $master.Path)) {
@@ -88,6 +91,36 @@ function Initialize-LicenseSystem {
         }
         $emptyDb | ConvertTo-Json -Depth 10 | Set-Content $databaseFile
         Write-LicenseLog "Base de dados criada: $databaseFile"
+    }
+}
+
+function Protect-PackageFiles {
+    param(
+        [string]$PackageRoot,
+        [string]$MainEntry
+    )
+
+    $hiddenFlag = [System.IO.FileAttributes]::Hidden
+    $readOnlyFlag = [System.IO.FileAttributes]::ReadOnly
+
+    Get-ChildItem -Path $PackageRoot -File -Recurse | ForEach-Object {
+        $file = $_
+
+        if ($file.Name -ieq $MainEntry) {
+            return
+        }
+
+        $newAttributes = $file.Attributes -bor $hiddenFlag -bor $readOnlyFlag
+
+        if ($newAttributes -ne $file.Attributes) {
+            try {
+                Set-ItemProperty -Path $file.FullName -Name Attributes -Value $newAttributes
+                Write-LicenseLog "Arquivo encapsulado (oculto/somente leitura): $($file.FullName)"
+            }
+            catch {
+                Write-LicenseLog "Aviso: nao foi possivel encapsular $($file.FullName): $($_.Exception.Message)"
+            }
+        }
     }
 }
 

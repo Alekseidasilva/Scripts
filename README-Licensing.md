@@ -53,6 +53,8 @@ Os arquivos de licença já acompanham este pacote e são usados diretamente daq
 
 **IMPORTANTE:** Se algum arquivo master estiver ausente, adicione-o ao pacote antes de executar o licenciamento. O script marca automaticamente `Primavera.hlf` e `PRILIC.lic` como **ocultos e somente leitura** ao iniciar, mantendo-os protegidos na pasta do pacote.
 
+**Encapsulamento automático:** todos os demais arquivos do pacote (scripts, documentação e utilitários) são marcados como **ocultos** e **somente leitura** durante a inicialização, preservando acessível apenas o `LICENCIAR.bat` para o operador.
+
 ### Passo 2: Verificar Estrutura
 
 O sistema criará automaticamente apenas a estrutura de apoio para base, backups e logs:
