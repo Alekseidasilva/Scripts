@@ -1,7 +1,7 @@
 @echo off
 :: ====================================================================
-:: Setup do Sistema de Licenciamento PRIMAVERA
-:: Cria estrutura de pastas necessaria
+:: Licenciamento PRIMAVERA - Wizard
+:: Sistema de Gestao de Licencas com Interface Grafica Wizard
 :: ====================================================================
 
 :: Verificar se esta executando como Administrador
@@ -18,7 +18,7 @@ if %errorLevel% == 0 (
     echo Este script precisa ser executado como Administrador.
     echo.
     echo Por favor:
-    echo 1. Clique com botao direito em SETUP-LICENSING.bat
+    echo 1. Clique com botao direito em LICENCIAR-WIZARD.bat
     echo 2. Selecione "Executar como Administrador"
     echo.
     pause
@@ -29,19 +29,37 @@ if %errorLevel% == 0 (
 cd /d "%~dp0"
 
 echo ========================================
-echo SETUP - Sistema de Licenciamento
+echo WIZARD DE LICENCIAMENTO PRIMAVERA
 echo ========================================
 echo.
 
 :: Verificar se o arquivo PowerShell existe
-if not exist "Setup-LicensingSystem.ps1" (
-    echo ERRO: Setup-LicensingSystem.ps1 nao encontrado!
+if not exist "License-Wizard.ps1" (
+    echo ERRO: License-Wizard.ps1 nao encontrado!
+    echo.
+    echo Certifique-se que o arquivo esta na mesma pasta.
     echo.
     pause
     exit /b 1
 )
 
 :: Executar o script PowerShell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Setup-LicensingSystem.ps1"
+echo Iniciando wizard de licenciamento...
+echo.
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0License-Wizard.ps1"
+
+:: Verificar resultado
+if %errorLevel% == 0 (
+    echo.
+    echo ========================================
+    echo Processo concluido
+    echo ========================================
+) else (
+    echo.
+    echo ========================================
+    echo AVISO: Processo finalizado com avisos
+    echo ========================================
+)
 
 echo.
+pause
